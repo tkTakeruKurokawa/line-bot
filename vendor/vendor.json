@@ -3,10 +3,106 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "/ix7M4gGtlOsNDosUbT6N9VmBo4=",
+			"path": "github.com/google/uuid",
+			"revision": "0e4e31197428a347842d152773b4cace4645ca25",
+			"revisionTime": "2020-07-02T18:56:42Z"
+		},
+		{
+			"checksumSHA1": "3ohk4dFYrERZ6WTdKkIwnTA0HSI=",
+			"path": "github.com/kr/pretty",
+			"revision": "73f6ac0b30a98e433b289500d779f50c1a6f0712",
+			"revisionTime": "2018-05-06T08:33:45Z"
+		},
+		{
+			"checksumSHA1": "SbguDK5lY8uhaHNrmJmNbiWIGM0=",
+			"path": "github.com/kr/text",
+			"revision": "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f",
+			"revisionTime": "2018-05-06T08:24:08Z"
+		},
+		{
 			"checksumSHA1": "qFkthFt1YMr5QUQ1h5ZCrGeouIA=",
 			"path": "github.com/line/line-bot-sdk-go/linebot",
 			"revision": "b4c3a9c2d1b84b4289ed8fd2de837c331a69ebfd",
 			"revisionTime": "2020-10-29T01:57:32Z"
+		},
+		{
+			"checksumSHA1": "/950VjPF9yHuuTb9GiM/W5uo+hs=",
+			"path": "github.com/rogpeppe/go-internal/fmtsort",
+			"revision": "eea92b9e2c4424af886c8c620efa50fff5a56387",
+			"revisionTime": "2020-11-06T09:19:43Z"
+		},
+		{
+			"checksumSHA1": "Dw3rpna1DwTa7TCzijInKcU49g4=",
+			"path": "go.opencensus.io/internal/tagencoding",
+			"revision": "380f4078db9f3ee20e26a08105ceecccddf872b8",
+			"revisionTime": "2020-11-02T22:21:23Z"
+		},
+		{
+			"checksumSHA1": "r6fbtPwxK4/TYUOWc7y0hXdAG4Q=",
+			"path": "go.opencensus.io/metric/metricdata",
+			"revision": "380f4078db9f3ee20e26a08105ceecccddf872b8",
+			"revisionTime": "2020-11-02T22:21:23Z"
+		},
+		{
+			"checksumSHA1": "kWj13srwY1SH5KgFecPhEfHnzVc=",
+			"path": "go.opencensus.io/metric/metricproducer",
+			"revision": "380f4078db9f3ee20e26a08105ceecccddf872b8",
+			"revisionTime": "2020-11-02T22:21:23Z"
+		},
+		{
+			"checksumSHA1": "q+y8X+5nDONIlJlxfkv+OtA18ds=",
+			"path": "go.opencensus.io/resource",
+			"revision": "380f4078db9f3ee20e26a08105ceecccddf872b8",
+			"revisionTime": "2020-11-02T22:21:23Z"
+		},
+		{
+			"checksumSHA1": "200DCtnI8eYciKRcg4q5uvKCnug=",
+			"path": "go.opencensus.io/stats",
+			"revision": "380f4078db9f3ee20e26a08105ceecccddf872b8",
+			"revisionTime": "2020-11-02T22:21:23Z"
+		},
+		{
+			"checksumSHA1": "oIo4NRi6AVCfcwVfHzCXAsoZsdI=",
+			"path": "go.opencensus.io/stats/internal",
+			"revision": "380f4078db9f3ee20e26a08105ceecccddf872b8",
+			"revisionTime": "2020-11-02T22:21:23Z"
+		},
+		{
+			"checksumSHA1": "IS4UdXiqJ5EJ9VYEedVvIJfDgGk=",
+			"path": "go.opencensus.io/stats/view",
+			"revision": "380f4078db9f3ee20e26a08105ceecccddf872b8",
+			"revisionTime": "2020-11-02T22:21:23Z"
+		},
+		{
+			"checksumSHA1": "rx4HvicGhFI5wv55qVaRAMsHZ7g=",
+			"path": "go.opencensus.io/tag",
+			"revision": "380f4078db9f3ee20e26a08105ceecccddf872b8",
+			"revisionTime": "2020-11-02T22:21:23Z"
+		},
+		{
+			"checksumSHA1": "JoNjqabFxmrY+82jB/QySAOBdYs=",
+			"path": "golang.org/x/time/rate",
+			"revision": "3af7569d3a1e776fc2a3c1cec133b43105ea9c2e",
+			"revisionTime": "2020-06-30T03:53:44Z"
+		},
+		{
+			"checksumSHA1": "bmZmNrkSJqTceEUWlZZx4flQIe4=",
+			"path": "googlemaps.github.io/maps",
+			"revision": "f2f6eaa6241d23638a88308cf5514f8f7321fdbf",
+			"revisionTime": "2020-10-06T13:49:09Z"
+		},
+		{
+			"checksumSHA1": "soBBf2rc8vbLqKHg1PxtKFWHqsg=",
+			"path": "googlemaps.github.io/maps/internal",
+			"revision": "f2f6eaa6241d23638a88308cf5514f8f7321fdbf",
+			"revisionTime": "2020-10-06T13:49:09Z"
+		},
+		{
+			"checksumSHA1": "b36s1qveksZJ/lUIk93OmiHfbCo=",
+			"path": "googlemaps.github.io/maps/metrics",
+			"revision": "f2f6eaa6241d23638a88308cf5514f8f7321fdbf",
+			"revisionTime": "2020-10-06T13:49:09Z"
 		}
 	],
 	"rootPath": "github.com/tkTakeruKurokawa/line-bot"
