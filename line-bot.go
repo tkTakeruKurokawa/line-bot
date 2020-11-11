@@ -36,7 +36,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	client, err := maps.NewClient(maps.WithAPIKey("AIzaSyCsR_K9D1yjSIzFLXo8XdukklTglMFOlSw"))
+	client, err := maps.NewClient(maps.WithAPIKey("GCP_API"))
 	if err != nil {
 		log.Fatalf("fatal error: %s", err)
 	}
