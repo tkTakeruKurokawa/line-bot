@@ -1,0 +1,410 @@
+{
+  "type": "flex",
+  "altText": "This is a Flex Message",
+  "contents": {
+    "type": "carousel",
+    "contents": [
+      {
+        "type": "bubble",
+        "header": {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "box",
+              "layout": "horizontal",
+              "contents": [
+                {
+                  "type": "image",
+                  "url": "https://via.placeholder.com/150x150?text=NO%20IMAGE",
+                  "gravity": "center",
+                  "size": "full",
+                  "aspectRatio": "150:196",
+                  "aspectMode": "cover"
+                },
+                {
+                  "type": "box",
+                  "layout": "vertical",
+                  "contents": [
+                    {
+                      "type": "image",
+                      "url": "https://via.placeholder.com/150x150?text=NO%20IMAGE",
+                      "gravity": "center",
+                      "size": "full",
+                      "aspectRatio": "150:98",
+                      "aspectMode": "cover"
+                    },
+                    {
+                      "type": "image",
+                      "url": "https://via.placeholder.com/150x150?text=NO%20IMAGE",
+                      "gravity": "center",
+                      "size": "full",
+                      "aspectRatio": "150:98",
+                      "aspectMode": "cover"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "paddingAll": "0px"
+        },
+        "body": {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "text",
+              "text": "店名",
+              "size": "xl",
+              "weight": "bold"
+            },
+            {
+              "type": "box",
+              "layout": "baseline",
+              "contents": [
+                {
+                  "type": "icon",
+                  "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png",
+                  "size": "sm"
+                },
+                {
+                  "type": "icon",
+                  "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png",
+                  "size": "sm"
+                },
+                {
+                  "type": "icon",
+                  "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png",
+                  "size": "sm"
+                },
+                {
+                  "type": "icon",
+                  "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png",
+                  "size": "sm"
+                },
+                {
+                  "type": "icon",
+                  "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gray_star_28.png",
+                  "size": "sm"
+                },
+                {
+                  "type": "text",
+                  "text": "4.0(10)",
+                  "margin": "md",
+                  "size": "sm",
+                  "color": "#999999"
+                }
+              ],
+              "margin": "md"
+            },
+            {
+              "type": "box",
+              "layout": "vertical",
+              "contents": [
+                {
+                  "type": "box",
+                  "layout": "baseline",
+                  "contents": [
+                    {
+                      "type": "text",
+                      "text": "場所",
+                      "flex": 1,
+                      "size": "sm",
+                      "color": "#aaaaaa"
+                    },
+                    {
+                      "type": "text",
+                      "text": "高島市，マキノ町寺久保258-1",
+                      "flex": 5,
+                      "wrap": true,
+                      "size": "sm",
+                      "color": "#666666"
+                    }
+                  ],
+                  "spacing": "sm"
+                },
+                {
+                  "type": "box",
+                  "layout": "baseline",
+                  "contents": [
+                    {
+                      "type": "text",
+                      "text": "営業時間",
+                      "flex": 1,
+                      "size": "sm",
+                      "color": "#aaaaaa"
+                    },
+                    {
+                      "type": "text",
+                      "text": "09:00 ~ 12:00 (営業中)",
+                      "wrap": true,
+                      "size": "sm",
+                      "color": "#32cd32",
+                      "flex": 3
+                    }
+                  ],
+                  "spacing": "sm"
+                }
+              ],
+              "spacing": "sm",
+              "margin": "md"
+            }
+          ]
+        },
+        "footer": {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "button",
+              "action": {
+                "type": "uri",
+                "label": "GoogleMapを開く",
+                "uri": "http://linecorp.com/"
+              },
+              "height": "sm",
+              "style": "link"
+            },
+            {
+              "type": "button",
+              "action": {
+                "type": "uri",
+                "label": "お店のURLを開く",
+                "uri": "http://linecorp.com/"
+              },
+              "height": "sm",
+              "style": "link"
+            },
+            {
+              "type": "button",
+              "action": {
+                "type": "uri",
+                "label": "目的地に追加する",
+                "uri": "http://linecorp.com/"
+              },
+              "height": "sm",
+              "style": "link"
+            },
+            {
+              "type": "spacer",
+              "size": "sm"
+            }
+          ],
+          "spacing": "sm"
+        }
+      },
+      {
+        "type": "bubble",
+        "header": {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "box",
+              "layout": "horizontal",
+              "contents": [
+                {
+                  "type": "image",
+                  "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/01_1_cafe.png",
+                  "gravity": "center",
+                  "size": "full",
+                  "aspectRatio": "150:196",
+                  "aspectMode": "cover"
+                },
+                {
+                  "type": "box",
+                  "layout": "vertical",
+                  "contents": [
+                    {
+                      "type": "image",
+                      "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/01_1_cafe.png",
+                      "gravity": "center",
+                      "size": "full",
+                      "aspectRatio": "150:98",
+                      "aspectMode": "cover"
+                    },
+                    {
+                      "type": "image",
+                      "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/01_1_cafe.png",
+                      "gravity": "center",
+                      "size": "full",
+                      "aspectRatio": "150:98",
+                      "aspectMode": "cover"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "paddingAll": "0px"
+        },
+        "body": {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "text",
+              "text": "店名",
+              "size": "xl",
+              "weight": "bold"
+            },
+            {
+              "type": "box",
+              "layout": "baseline",
+              "contents": [
+                {
+                  "type": "icon",
+                  "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png",
+                  "size": "sm"
+                },
+                {
+                  "type": "icon",
+                  "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png",
+                  "size": "sm"
+                },
+                {
+                  "type": "icon",
+                  "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png",
+                  "size": "sm"
+                },
+                {
+                  "type": "icon",
+                  "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png",
+                  "size": "sm"
+                },
+                {
+                  "type": "icon",
+                  "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gray_star_28.png",
+                  "size": "sm"
+                },
+                {
+                  "type": "text",
+                  "text": "4.0(10)",
+                  "margin": "md",
+                  "size": "sm",
+                  "color": "#999999"
+                }
+              ],
+              "margin": "md"
+            },
+            {
+              "type": "box",
+              "layout": "vertical",
+              "contents": [
+                {
+                  "type": "box",
+                  "layout": "baseline",
+                  "contents": [
+                    {
+                      "type": "text",
+                      "text": "場所",
+                      "flex": 1,
+                      "size": "sm",
+                      "color": "#aaaaaa"
+                    },
+                    {
+                      "type": "text",
+                      "text": "高島市，マキノ町寺久保258-1",
+                      "flex": 5,
+                      "wrap": true,
+                      "size": "sm",
+                      "color": "#666666"
+                    }
+                  ],
+                  "spacing": "sm"
+                },
+                {
+                  "type": "box",
+                  "layout": "baseline",
+                  "contents": [
+                    {
+                      "type": "text",
+                      "text": "営業時間",
+                      "flex": 1,
+                      "size": "sm",
+                      "color": "#aaaaaa"
+                    },
+                    {
+                      "type": "text",
+                      "text": "09:00 ~ 12:00 (営業中)",
+                      "wrap": true,
+                      "size": "sm",
+                      "color": "#32cd32",
+                      "flex": 3
+                    }
+                  ],
+                  "spacing": "sm"
+                }
+              ],
+              "spacing": "sm",
+              "margin": "md"
+            }
+          ]
+        },
+        "footer": {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "button",
+              "action": {
+                "type": "uri",
+                "label": "GoogleMapを開く",
+                "uri": "http://linecorp.com/"
+              },
+              "height": "sm",
+              "style": "link"
+            },
+            {
+              "type": "button",
+              "action": {
+                "type": "uri",
+                "label": "目的地に追加する",
+                "uri": "http://linecorp.com/"
+              },
+              "height": "sm",
+              "style": "link"
+            },
+            {
+              "type": "spacer",
+              "size": "sm"
+            }
+          ],
+          "spacing": "sm"
+        }
+      },
+      {
+        "type": "bubble",
+        "body": {
+          "type": "box",
+          "layout": "vertical",
+          "contents": [
+            {
+              "type": "button",
+              "action": {
+                "type": "uri",
+                "label": "次の20件を検索",
+                "uri": "http://linecorp.com/"
+              },
+              "flex": 5,
+              "style": "link",
+              "gravity": "center"
+            },
+            {
+              "type": "button",
+              "action": {
+                "type": "uri",
+                "label": "検索を終了し，目的地を表示",
+                "uri": "http://linecorp.com/"
+              },
+              "flex": 5,
+              "style": "link",
+              "gravity": "center"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
