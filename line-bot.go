@@ -75,10 +75,10 @@ func main() {
 						}
 					}
 				case *linebot.LocationMessage:
-					log.Println(message.Title)
-					log.Println(message.Address)
 					location := []float64{message.Latitude, message.Longitude}
-					getUsedClothingShop(location)
+					searchResults := getUsedClothingShop(location)
+					detailResults := getPlaceDetailResults(searchResults)
+					sendFlexMessages(detailResults, event.ReplyToken)
 					// if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(detail.URL), linebot.NewTextMessage(detail.Website)).Do(); err != nil {
 					// 	log.Print(err)
 					// }
