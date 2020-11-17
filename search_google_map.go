@@ -20,7 +20,7 @@ const noImage = "https://via.placeholder.com/150x150?text=NO%20IMAGE"
 // NewClient GoogleMapAPIのクライアントを生成
 func newClient() {
 	var err error
-	Client, err = maps.NewClient(maps.WithAPIKey("AIzaSyCsR_K9D1yjSIzFLXo8XdukklTglMFOlSw"))
+	Client, err = maps.NewClient(maps.WithAPIKey(os.Getenv("GCP_API")))
 
 	if err != nil {
 		log.Fatalf("fatal error: %s", err)
