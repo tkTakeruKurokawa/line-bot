@@ -178,7 +178,7 @@ func getBubbles(shopData [][]maps.PlacesSearchResult, nextPageToken string) []*B
 
 		bubbles = append(bubbles, getShopBubble(shopDetail, photo))
 	}
-	if !(reflect.ValueOf(shopData[1]).IsNil() && reflect.ValueOf(nextPageToken).IsZero()) {
+	if !(reflect.ValueOf(shopData[1]).IsNil() && len(nextPageToken) == 0) {
 		bubbles = append(bubbles, getNextActionBubble())
 	}
 
