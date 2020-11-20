@@ -30,7 +30,8 @@ func newClient() {
 // GetGeometryLocation 検索用語を受け取り，地名を検索し，緯度・経度を返す
 func getGeometryLocation(term string) []float64 {
 	request := &maps.GeocodingRequest{
-		Address: term,
+		Address:  term,
+		Language: "ja",
 	}
 
 	respons, err := Client.Geocode(context.Background(), request)
@@ -45,18 +46,12 @@ func getGeometryLocation(term string) []float64 {
 }
 
 // GetUsedClothingShop 緯度・経度を受け取り，付近の古着屋を検索し，検索結果を返す
-func getUsedClothingShop(location []float64) []maps.PlacesSearchResult {
+func getUsedClothingShop(location []float64) ([][]maps.PlacesSearchResult, string) {
 	request := &maps.TextSearchRequest{
 		Location: &maps.LatLng{Lat: location[0], Lng: location[1]},
 		Radius:   1000,
 		Query:    "男性古着屋",
 		Type:     maps.PlaceTypeClothingStore,
-	}
-
-	response, err := Client.TextSearch(context.Background(), request)
-	if err != nil {
-		log.Fatalf("fatal error: %s", err)
-
 	}
 
 	// for _, result := range response.Results {
@@ -86,7 +81,7 @@ func getUsedClothingShop(location []float64) []maps.PlacesSearchResult {
 	// }
 	// pretty.Println(response)
 
-	return response.Results
+	return searchShops(request)
 }
 
 // GetSelectClothingShop 緯度・経度を受け取り，付近のセレクトショップを検索し，検索結果を返す
@@ -165,22 +160,13 @@ func getOtherClothingShop(location []float64) {
 	pretty.Println(response)
 }
 
-func getPlaceDetailResults(searchResults []maps.PlacesSearchResult) []maps.PlaceDetailsResult {
-	var detailResults []maps.PlaceDetailsResult
-
-	for _, searchResult := range searchResults {
-		detailResults = append(detailResults, getPlaceDetails(searchResult.PlaceID))
-	}
-
-	return detailResults
-}
-
 // GetPlaceDetails 位置情報を受け取り，その位置の詳細情報を取得し，返す
 func getPlaceDetails(placeID string) maps.PlaceDetailsResult {
 	detailRequest := &maps.PlaceDetailsRequest{
 		PlaceID:  placeID,
 		Language: "ja",
 		Fields: []maps.PlaceDetailsFieldMask{
+			maps.PlaceDetailsFieldMaskPlaceID,
 			maps.PlaceDetailsFieldMaskVicinity,
 			maps.PlaceDetailsFieldMaskName,
 			maps.PlaceDetailsFieldMaskRatings,
@@ -196,6 +182,8 @@ func getPlaceDetails(placeID string) maps.PlaceDetailsResult {
 	if err != nil {
 		log.Fatalf("fatal error: %s", err)
 	}
+
+	// pretty.Println(detailResult)
 
 	return detailResult
 }
@@ -241,4 +229,34 @@ func getPlacePhotoURL(photoReference string) string {
 	}
 
 	return noImage
+}
+
+func getNextShops(nextPageToken string) ([][]maps.PlacesSearchResult, string) {
+	request := &maps.TextSearchRequest{
+		PageToken: nextPageToken,
+	}
+
+	return searchShops(request)
+}
+
+func searchShops(request *maps.TextSearchRequest) ([][]maps.PlacesSearchResult, string) {
+	response, err := Client.TextSearch(context.Background(), request)
+	if err != nil {
+		log.Fatalf("fatal error: %s", err)
+
+	}
+
+	var shops [][]maps.PlacesSearchResult = make([][]maps.PlacesSearchResult, 2)
+
+	// pretty.Println(shops)
+
+	for index, shopResult := range response.Results {
+		if index < 10 {
+			shops[0] = append(shops[0], shopResult)
+		} else {
+			shops[1] = append(shops[1], shopResult)
+		}
+	}
+
+	return shops, response.NextPageToken
 }

@@ -25,13 +25,39 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"reflect"
 
 	// "github.com/kr/pretty"
 	// "github.com/kr/pretty"
 
+	"github.com/kr/pretty"
 	"github.com/line/line-bot-sdk-go/linebot"
 	"googlemaps.github.io/maps"
 )
+
+// ShopData 店の検索結果
+type ShopData struct {
+	NextShops []maps.PlacesSearchResult
+	// ShopFrom10to19 []maps.PlacesSearchResult
+	NextPageToken string
+}
+
+// ClickCounter 次の10件を検索するを何回押したかカウントする
+type ClickCounter struct {
+	counter int
+}
+
+func (cc *ClickCounter) nowCount() int {
+	return cc.counter
+}
+
+func (cc *ClickCounter) inclement() {
+	cc.counter++
+}
+
+func (cc *ClickCounter) reset() {
+	cc.counter = 0
+}
 
 func main() {
 	bot, err := linebot.New(
@@ -43,6 +69,9 @@ func main() {
 	}
 
 	newClient()
+
+	clickCounter := new(ClickCounter)
+	shopData := &ShopData{}
 
 	// Setup HTTP Server for receiving requests from LINE platform
 	http.HandleFunc("/callback", func(w http.ResponseWriter, req *http.Request) {
@@ -56,6 +85,8 @@ func main() {
 			return
 		}
 		for _, event := range events {
+			pretty.Println("Next Page Token: ", shopData.NextPageToken)
+
 			if event.Type == linebot.EventTypeMessage {
 				switch message := event.Message.(type) {
 				case *linebot.TextMessage:
@@ -66,9 +97,9 @@ func main() {
 					location := getGeometryLocation(message.Text)
 
 					if len(location) > 0 {
-						searchResults := getUsedClothingShop(location)
-						detailResults := getPlaceDetailResults(searchResults)
-						sendFlexMessages(detailResults, event.ReplyToken)
+						shopData = buildAndSendFlexMessage(location, event.ReplyToken)
+						// shopData.NextShops = shopData.ShopFrom10to19
+						// shopData.ShopFrom10to19 = []maps.PlacesSearchResult{}
 					} else {
 						if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("入力された地名が見つかりません")).Do(); err != nil {
 							log.Print(err)
@@ -76,12 +107,24 @@ func main() {
 					}
 				case *linebot.LocationMessage:
 					location := []float64{message.Latitude, message.Longitude}
-					searchResults := getUsedClothingShop(location)
-					detailResults := getPlaceDetailResults(searchResults)
-					sendFlexMessages(detailResults, event.ReplyToken)
+					shopData = buildAndSendFlexMessage(location, event.ReplyToken)
 					// if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(detail.URL), linebot.NewTextMessage(detail.Website)).Do(); err != nil {
 					// 	log.Print(err)
 					// }
+				}
+			}
+			if event.Type == linebot.EventTypePostback {
+				if event.Postback.Data == "continue" {
+					clickCounter.inclement()
+					// fmt.Println(clickCounter.nowCount())
+
+					if clickCounter.nowCount() == 1 {
+						if _, err = bot.PushMessage(event.Source.UserID, linebot.NewTextMessage("次の10件を検索します")).Do(); err != nil {
+							log.Print(err)
+						}
+						shopData = buildAndSendNextFlexMessage(shopData, event.ReplyToken)
+						clickCounter.reset()
+					}
 				}
 			}
 		}
@@ -93,18 +136,78 @@ func main() {
 	}
 }
 
-func newRequest(flex Flex, replyToken string) (*http.Request, error) {
-	message, err := json.Marshal(&struct {
-		ReplyToken string `json:"replyToken"`
-		Messages   []Flex `json:"messages"`
-	}{
-		ReplyToken: replyToken,
-		Messages:   []Flex{flex},
-	})
+func buildAndSendFlexMessage(location []float64, replyToken string) *ShopData {
+	shopData, nextPageToken := getUsedClothingShop(location)
 
-	// pretty.Println(string(message))
+	return sendMessageAndBuildShopData(shopData, replyToken, nextPageToken)
+}
 
-	// pretty.Println(flex)
+func buildAndSendNextFlexMessage(shopData *ShopData, replyToken string) *ShopData {
+	if reflect.ValueOf(shopData.NextShops).IsNil() {
+		shopData, nextPageToken := getNextShops(shopData.NextPageToken)
+
+		return sendMessageAndBuildShopData(shopData, replyToken, nextPageToken)
+	}
+
+	shops := [][]maps.PlacesSearchResult{shopData.NextShops, nil}
+
+	return sendMessageAndBuildShopData(shops, replyToken, shopData.NextPageToken)
+}
+
+func sendMessageAndBuildShopData(shopData [][]maps.PlacesSearchResult, replyToken string, nextPageToken string) *ShopData {
+	bubbles := getBubbles(shopData, nextPageToken)
+	sendFlexMessage(bubbles, replyToken)
+
+	return &ShopData{
+		NextShops:     shopData[1],
+		NextPageToken: nextPageToken,
+	}
+}
+
+func getBubbles(shopData [][]maps.PlacesSearchResult, nextPageToken string) []*Bubble {
+	var shopDetails []maps.PlaceDetailsResult
+	var photos [][]string
+	var bubbles []*Bubble
+
+	for _, shop := range shopData[0] {
+		shopDetail := getPlaceDetails(shop.PlaceID)
+		shopDetails = append(shopDetails, shopDetail)
+
+		photo := getPlacePhotos(shopDetail.Photos)
+		photos = append(photos, photo)
+
+		bubbles = append(bubbles, getShopBubble(shopDetail, photo))
+	}
+	if !(reflect.ValueOf(shopData[1]).IsNil() && reflect.ValueOf(nextPageToken).IsZero()) {
+		bubbles = append(bubbles, getNextActionBubble())
+	}
+
+	return bubbles
+}
+
+func sendFlexMessage(bubbles []*Bubble, replyToken string) {
+	req, err := buildRequest(bubbles, replyToken)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	client := new(http.Client)
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer res.Body.Close()
+
+	dumpResp, _ := httputil.DumpResponse(res, true)
+	fmt.Printf("%s\n\n", dumpResp)
+}
+
+func buildRequest(bubbles []*Bubble, replyToken string) (*http.Request, error) {
+	message, err := json.Marshal(getFlexMessage(bubbles, replyToken))
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	req, err := http.NewRequest("POST", "https://api.line.me/v2/bot/message/reply", bytes.NewReader(message))
 	if err != nil {
 		return nil, err
@@ -114,30 +217,4 @@ func newRequest(flex Flex, replyToken string) (*http.Request, error) {
 	req.Header.Set("Authorization", "Bearer {"+os.Getenv("CHANNEL_TOKEN")+"}")
 
 	return req, nil
-}
-
-func sendFlexMessages(detailResults []maps.PlaceDetailsResult, replyToken string) {
-	flexFormer, _ := getFlexMessage(detailResults)
-	// for _, flex := range []Flex{flexFormer, flexLatter} {
-
-	// }
-	req, err := newRequest(flexFormer, replyToken)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	client := new(http.Client)
-	res, err := client.Do(req)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
-
-	dumpResp, _ := httputil.DumpResponse(res, true)
-	fmt.Printf("%s", dumpResp)
-	// res, err := http.DefaultClient.Do(req)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
-	defer res.Body.Close()
-	// pretty.Println(res.)
 }
