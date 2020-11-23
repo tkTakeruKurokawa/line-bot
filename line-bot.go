@@ -15,9 +15,6 @@
 package main
 
 import (
-	// "fmt"
-	// "fmt"
-
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -27,36 +24,68 @@ import (
 	"os"
 	"reflect"
 
-	// "github.com/kr/pretty"
-	// "github.com/kr/pretty"
-
-	"github.com/kr/pretty"
 	"github.com/line/line-bot-sdk-go/linebot"
 	"googlemaps.github.io/maps"
 )
 
 // ShopData 店の検索結果
 type ShopData struct {
-	NextShops []maps.PlacesSearchResult
-	// ShopFrom10to19 []maps.PlacesSearchResult
+	NextShops     []maps.PlacesSearchResult
 	NextPageToken string
 }
 
-// ClickCounter 次の10件を検索するを何回押したかカウントする
-type ClickCounter struct {
+// SearchData 検索に使うデータ
+type SearchData struct {
+	Type          string
+	TypeName      string
+	Location      []float64
+	LocationName  string
+	UserID        string
+	ReplyToken    string
+	SelectMessage *linebot.ButtonsTemplate
+}
+
+// ClickLocker 次の10件を検索するを何回押したかカウントする
+type ClickLocker struct {
 	counter int
 }
 
-func (cc *ClickCounter) nowCount() int {
+func (cc *ClickLocker) nowCount() int {
 	return cc.counter
 }
 
-func (cc *ClickCounter) inclement() {
+func (cc *ClickLocker) inclement() {
 	cc.counter++
 }
 
-func (cc *ClickCounter) reset() {
+func (cc *ClickLocker) reset() {
 	cc.counter = 0
+}
+
+func initializeSearchData() *SearchData {
+	return &SearchData{
+		SelectMessage: &linebot.ButtonsTemplate{
+			Text: "検索する店の種類を選んで下さい",
+			Actions: []linebot.TemplateAction{
+				&linebot.PostbackAction{
+					Label: "古着屋",
+					Data:  "used",
+				},
+				&linebot.PostbackAction{
+					Label: "セレクトショップ",
+					Data:  "select",
+				},
+				&linebot.PostbackAction{
+					Label: "その他の衣料品店",
+					Data:  "other",
+				},
+				&linebot.PostbackAction{
+					Label: "カフェ",
+					Data:  "cafe",
+				},
+			},
+		},
+	}
 }
 
 func main() {
@@ -70,8 +99,9 @@ func main() {
 
 	newClient()
 
-	clickCounter := new(ClickCounter)
 	shopData := &ShopData{}
+	searchData := initializeSearchData()
+	clickLocker := new(ClickLocker)
 
 	// Setup HTTP Server for receiving requests from LINE platform
 	http.HandleFunc("/callback", func(w http.ResponseWriter, req *http.Request) {
@@ -85,48 +115,53 @@ func main() {
 			return
 		}
 		for _, event := range events {
-			pretty.Println("Next Page Token: ", shopData.NextPageToken)
+			searchData.UserID = event.Source.UserID
+			searchData.ReplyToken = event.ReplyToken
 
 			if event.Type == linebot.EventTypeMessage {
 				switch message := event.Message.(type) {
 				case *linebot.TextMessage:
-					// if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("alt txt", Get())).Do(); err != nil {
-					// 	log.Print(err)
-					// }
+					searchData.Location = getGeometryLocation(message.Text)
+					searchData.LocationName = message.Text
 
-					location := getGeometryLocation(message.Text)
-
-					if len(location) > 0 {
-						shopData = buildAndSendFlexMessage(location, event.ReplyToken)
-						// shopData.NextShops = shopData.ShopFrom10to19
-						// shopData.ShopFrom10to19 = []maps.PlacesSearchResult{}
+					if len(searchData.Location) > 0 {
 					} else {
 						if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("入力された地名が見つかりません")).Do(); err != nil {
 							log.Print(err)
 						}
 					}
+
 				case *linebot.LocationMessage:
-					location := []float64{message.Latitude, message.Longitude}
-					shopData = buildAndSendFlexMessage(location, event.ReplyToken)
-					// if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(detail.URL), linebot.NewTextMessage(detail.Website)).Do(); err != nil {
-					// 	log.Print(err)
-					// }
+					searchData.Location = []float64{message.Latitude, message.Longitude}
+					searchData.LocationName = message.Address
 				}
 			}
 			if event.Type == linebot.EventTypePostback {
-				if event.Postback.Data == "continue" {
-					clickCounter.inclement()
-					// fmt.Println(clickCounter.nowCount())
+				switch data := event.Postback.Data; data {
+				case "next":
+					searchData.Type = data
 
-					if clickCounter.nowCount() == 1 {
-						if _, err = bot.PushMessage(event.Source.UserID, linebot.NewTextMessage("次の10件を検索します")).Do(); err != nil {
-							log.Print(err)
-						}
-						shopData = buildAndSendNextFlexMessage(shopData, event.ReplyToken)
-						clickCounter.reset()
-					}
+				case "used":
+					searchData.Type = data
+					searchData.TypeName = "古着屋"
+
+				case "select":
+					searchData.Type = data
+					searchData.TypeName = "セレクトショップ"
+				case "other":
+					searchData.Type = data
+					searchData.TypeName = "その他の衣料品店"
+				case "cafe":
+					searchData.Type = data
+					searchData.TypeName = "カフェ"
 				}
 			}
+		}
+
+		clickLocker.inclement()
+		if clickLocker.nowCount() == 1 {
+			shopData, searchData = startSearchOrSendMessage(bot, shopData, searchData)
+			clickLocker.reset()
 		}
 	})
 	// This is just sample code.
@@ -136,12 +171,74 @@ func main() {
 	}
 }
 
-func buildAndSendFlexMessage(location []float64, replyToken string) *ShopData {
-	shopData, nextPageToken := getUsedClothingShop(location)
+// startSearchOrSendMessage 検索を開始するもしくは次の行動を促すメッセージを送信する
+func startSearchOrSendMessage(bot *linebot.Client, shopData *ShopData, searchData *SearchData) (*ShopData, *SearchData) {
+	var situationMessage, nextActionMessage linebot.SendingMessage
+
+	switch {
+	case searchData.Type == "next":
+		shopData = executeNextAction(bot, shopData, searchData)
+		searchData = initializeSearchData()
+		return shopData, searchData
+
+	case len(searchData.Location) > 0 && len(searchData.Type) > 0:
+		if _, err := bot.PushMessage(searchData.UserID, linebot.NewTextMessage("種類： "+searchData.TypeName+"\n場所: "+searchData.LocationName), linebot.NewTextMessage("上記内容で検索します")).Do(); err != nil {
+			log.Print(err)
+		}
+
+		shopData = buildAndSendFlexMessage(searchData.Location, searchData.Type, searchData.ReplyToken)
+		searchData = initializeSearchData()
+		return shopData, searchData
+
+	case len(searchData.Location) > 0 && len(searchData.Type) == 0:
+		situationMessage = linebot.NewTextMessage("種類： " + searchData.TypeName + "\n場所: " + searchData.LocationName)
+		nextActionMessage = linebot.NewTemplateMessage("検索する店の種類を選んで下さい", searchData.SelectMessage)
+
+	case len(searchData.Location) == 0 && len(searchData.Type) > 0:
+		situationMessage = linebot.NewTextMessage("種類： " + searchData.TypeName + "\n場所: " + searchData.LocationName)
+		nextActionMessage = linebot.NewTextMessage("位置情報を送るか検索したい場所の名称を送ってください\n(例：東京駅)")
+	}
+
+	shopData = &ShopData{}
+	if _, err := bot.PushMessage(searchData.UserID, situationMessage, nextActionMessage).Do(); err != nil {
+		log.Print(err)
+	}
+
+	return shopData, searchData
+}
+
+// executeNextAction 次の10件を検索する
+func executeNextAction(bot *linebot.Client, shopData *ShopData, searchData *SearchData) *ShopData {
+	if reflect.ValueOf(shopData.NextShops).IsNil() && len(shopData.NextPageToken) == 0 {
+		if _, err := bot.PushMessage(searchData.UserID, linebot.NewTextMessage("検索できません．検索場所，検索対象を入力して下さい")).Do(); err != nil {
+			log.Print(err)
+		}
+
+	} else {
+		if _, err := bot.PushMessage(searchData.UserID, linebot.NewTextMessage("次の10件を検索します")).Do(); err != nil {
+			log.Print(err)
+		}
+
+		shopData = buildAndSendNextFlexMessage(shopData, searchData.ReplyToken)
+
+		if reflect.ValueOf(shopData.NextShops).IsNil() && len(shopData.NextPageToken) == 0 {
+			if _, err := bot.PushMessage(searchData.UserID, linebot.NewTextMessage("最大検索数に達したため，検索を終了します")).Do(); err != nil {
+				log.Print(err)
+			}
+		}
+	}
+
+	return shopData
+}
+
+// buildAndSendFlexMessage FlexMessageを構築し，送信する
+func buildAndSendFlexMessage(location []float64, shopType string, replyToken string) *ShopData {
+	shopData, nextPageToken := getShopData(location, shopType)
 
 	return sendMessageAndBuildShopData(shopData, replyToken, nextPageToken)
 }
 
+// buildAndSendNextFlexMessage 次の10件のFlexMessageを構築し，送信する
 func buildAndSendNextFlexMessage(shopData *ShopData, replyToken string) *ShopData {
 	if reflect.ValueOf(shopData.NextShops).IsNil() {
 		shopData, nextPageToken := getNextShops(shopData.NextPageToken)
@@ -154,6 +251,7 @@ func buildAndSendNextFlexMessage(shopData *ShopData, replyToken string) *ShopDat
 	return sendMessageAndBuildShopData(shops, replyToken, shopData.NextPageToken)
 }
 
+// sendMessageAndBuildShopData FlexMessageを構築し，送信する
 func sendMessageAndBuildShopData(shopData [][]maps.PlacesSearchResult, replyToken string, nextPageToken string) *ShopData {
 	bubbles := getBubbles(shopData, nextPageToken)
 	sendFlexMessage(bubbles, replyToken)
@@ -164,6 +262,7 @@ func sendMessageAndBuildShopData(shopData [][]maps.PlacesSearchResult, replyToke
 	}
 }
 
+// getBubbles FlexMessageを構成するバブルを構築する
 func getBubbles(shopData [][]maps.PlacesSearchResult, nextPageToken string) []*Bubble {
 	var shopDetails []maps.PlaceDetailsResult
 	var photos [][]string
@@ -185,6 +284,7 @@ func getBubbles(shopData [][]maps.PlacesSearchResult, nextPageToken string) []*B
 	return bubbles
 }
 
+// sendFlexMessage http.Clientを利用してFlexMessageを送る
 func sendFlexMessage(bubbles []*Bubble, replyToken string) {
 	req, err := buildRequest(bubbles, replyToken)
 	if err != nil {
@@ -202,6 +302,7 @@ func sendFlexMessage(bubbles []*Bubble, replyToken string) {
 	fmt.Printf("%s\n\n", dumpResp)
 }
 
+// buildRequest リクエストを構築する
 func buildRequest(bubbles []*Bubble, replyToken string) (*http.Request, error) {
 	message, err := json.Marshal(getFlexMessage(bubbles, replyToken))
 	if err != nil {

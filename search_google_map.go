@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/kr/pretty"
 	"googlemaps.github.io/maps"
 )
 
@@ -27,7 +25,7 @@ func newClient() {
 	}
 }
 
-// GetGeometryLocation 検索用語を受け取り，地名を検索し，緯度・経度を返す
+// getGeometryLocation 検索用語を受け取り，地名を検索し，緯度・経度を返す
 func getGeometryLocation(term string) []float64 {
 	request := &maps.GeocodingRequest{
 		Address:  term,
@@ -45,119 +43,37 @@ func getGeometryLocation(term string) []float64 {
 	return []float64{respons[0].Geometry.Location.Lat, respons[0].Geometry.Location.Lng}
 }
 
-// GetUsedClothingShop 緯度・経度を受け取り，付近の古着屋を検索し，検索結果を返す
-func getUsedClothingShop(location []float64) ([][]maps.PlacesSearchResult, string) {
+// getShopData 緯度経度，検索対象を受け取り，検索し，結果一覧を返す
+func getShopData(location []float64, shopType string) ([][]maps.PlacesSearchResult, string) {
+	query, category := getQuery(shopType)
+	if len(query) == 0 {
+		log.Fatalln("Invalid shop type")
+	}
+
 	request := &maps.TextSearchRequest{
 		Location: &maps.LatLng{Lat: location[0], Lng: location[1]},
 		Radius:   1000,
-		Query:    "男性古着屋",
-		Type:     maps.PlaceTypeClothingStore,
+		Query:    query,
+		Type:     category,
 	}
-
-	// for _, result := range response.Results {
-	// 	result := GetPlaceDetails(result.PlaceID)
-	// 	pretty.Println(GetPlacePhotos(result.Photos))
-	// }
-
-	// for {
-	// 	for _, result := range response.Results {
-	// 		fmt.Println(result.Name)
-	// 	}
-	// 	if len(response.NextPageToken) == 0 {
-	// 		break
-	// 	}
-
-	// 	// time.Sleep(time.Second * 5)
-	// 	request = &maps.TextSearchRequest{
-	// 		PageToken: response.NextPageToken,
-	// 	}
-	// 	response, err = Client.TextSearch(context.Background(), request)
-	// 	if err != nil {
-	// 		// if response.HTMLAttribution {
-
-	// 		// }
-	// 		log.Fatalf("fatal error: %s", err)
-	// 	}
-	// }
-	// pretty.Println(response)
 
 	return searchShops(request)
 }
 
-// GetSelectClothingShop 緯度・経度を受け取り，付近のセレクトショップを検索し，検索結果を返す
-func getSelectClothingShop(location []float64) {
-	request := &maps.TextSearchRequest{
-		Location: &maps.LatLng{Lat: location[0], Lng: location[1]},
-		Radius:   1000,
-		Query:    "男性セレクトショップ",
-		Type:     maps.PlaceTypeClothingStore,
+// getQuery 検索対象を受け取り，それに応じた検索用語と検索場所の種類を返す
+func getQuery(shopType string) (string, maps.PlaceType) {
+	switch shopType {
+	case "used":
+		return "男性古着屋", maps.PlaceTypeClothingStore
+	case "select":
+		return "男性セレクトショップ", maps.PlaceTypeClothingStore
+	case "other":
+		return "(男性衣料品ブランド) || (Clothing Brand && Men)", maps.PlaceTypeClothingStore
+	case "cafe":
+		return "カフェ || Cafe", maps.PlaceTypeCafe
 	}
 
-	response, err := Client.TextSearch(context.Background(), request)
-	if err != nil {
-		log.Fatalf("fatal error: %s", err)
-
-	}
-
-	for {
-		for _, result := range response.Results {
-			fmt.Println(result.Name)
-		}
-		if len(response.NextPageToken) == 0 {
-			break
-		}
-
-		// time.Sleep(time.Second * 5)
-		request = &maps.TextSearchRequest{
-			PageToken: response.NextPageToken,
-		}
-		response, err = Client.TextSearch(context.Background(), request)
-		if err != nil {
-			// if response.HTMLAttribution {
-
-			// }
-			log.Fatalf("fatal error: %s", err)
-		}
-	}
-	pretty.Println(response)
-}
-
-// GetOtherClothingShop 緯度・経度を受け取り，付近の衣料品店を検索し，検索結果を返す
-func getOtherClothingShop(location []float64) {
-	request := &maps.TextSearchRequest{
-		Location: &maps.LatLng{Lat: location[0], Lng: location[1]},
-		Radius:   1000,
-		Query:    "(男性衣料品ブランド) || (Clothing Brand && Men)",
-		Type:     maps.PlaceTypeClothingStore,
-	}
-
-	response, err := Client.TextSearch(context.Background(), request)
-	if err != nil {
-		log.Fatalf("fatal error: %s", err)
-
-	}
-
-	for {
-		for _, result := range response.Results {
-			fmt.Println(result.Name)
-		}
-		if len(response.NextPageToken) == 0 {
-			break
-		}
-
-		// time.Sleep(time.Second * 5)
-		request = &maps.TextSearchRequest{
-			PageToken: response.NextPageToken,
-		}
-		response, err = Client.TextSearch(context.Background(), request)
-		if err != nil {
-			// if response.HTMLAttribution {
-
-			// }
-			log.Fatalf("fatal error: %s", err)
-		}
-	}
-	pretty.Println(response)
+	return "", ""
 }
 
 // GetPlaceDetails 位置情報を受け取り，その位置の詳細情報を取得し，返す
@@ -183,8 +99,6 @@ func getPlaceDetails(placeID string) maps.PlaceDetailsResult {
 		log.Fatalf("fatal error: %s", err)
 	}
 
-	// pretty.Println(detailResult)
-
 	return detailResult
 }
 
@@ -194,14 +108,11 @@ func getPlacePhotos(photos []maps.Photo) []string {
 	for i := 0; i < 3; i++ {
 		photoResponses = append(photoResponses, noImage)
 	}
-	// photoResponses = make([]maps.PlacePhotoResponse, 3, 3)
 
 	for index, photo := range photos {
 		if index > 2 {
 			break
 		}
-
-		// pretty.Println(photo)
 
 		photoResponses[index] = getPlacePhotoURL(photo.PhotoReference)
 	}
@@ -231,6 +142,7 @@ func getPlacePhotoURL(photoReference string) string {
 	return noImage
 }
 
+// getNextShops 次の20件の検索結果一覧を返す
 func getNextShops(nextPageToken string) ([][]maps.PlacesSearchResult, string) {
 	request := &maps.TextSearchRequest{
 		PageToken: nextPageToken,
@@ -239,6 +151,7 @@ func getNextShops(nextPageToken string) ([][]maps.PlacesSearchResult, string) {
 	return searchShops(request)
 }
 
+// searchShops リクエスト内容を受け取り，TextSearchRequestを行い，検索結果一覧と次の20件の検索結果一覧にアクセスするトークンを返す
 func searchShops(request *maps.TextSearchRequest) ([][]maps.PlacesSearchResult, string) {
 	response, err := Client.TextSearch(context.Background(), request)
 	if err != nil {
@@ -247,8 +160,6 @@ func searchShops(request *maps.TextSearchRequest) ([][]maps.PlacesSearchResult, 
 	}
 
 	var shops [][]maps.PlacesSearchResult = make([][]maps.PlacesSearchResult, 2)
-
-	// pretty.Println(shops)
 
 	for index, shopResult := range response.Results {
 		if index < 10 {

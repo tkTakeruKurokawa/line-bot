@@ -346,8 +346,7 @@ func buildEvaluationText(rating float32, ratingCount int) *Text {
 	value := math.Round(float64(rating))
 
 	return &Text{
-		Type: typeText,
-		// Text:   fmt.Sprintf("%.0f", rating) + "(" + strconv.Itoa(ratingCount) + ")",
+		Type:   typeText,
 		Text:   fmt.Sprint(value) + "(" + fmt.Sprint(ratingCount) + ")",
 		Margin: sizeMd,
 		Size:   sizeSm,
@@ -506,8 +505,7 @@ func getNextActionBubble() *Bubble {
 			Type:   typeBox,
 			Layout: layoutVertical,
 			Contents: []ContentsContainer{
-				buildPostbackActionButtonComponent("次の10件を検索", "continue"),
-				// buildPostbackActionButtonComponent("検索終了", "finish"),
+				buildPostbackActionButtonComponent("次の10件を検索", "next"),
 			},
 		},
 	}
