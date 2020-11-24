@@ -45,15 +45,15 @@ func getGeometryLocation(term string) []float64 {
 
 // getShopData 緯度経度，検索対象を受け取り，検索し，結果一覧を返す
 func getShopData(location []float64, shopType string) ([][]maps.PlacesSearchResult, string) {
-	query, category := getQuery(shopType)
-	if len(query) == 0 {
+	keyword, category := getQuery(shopType)
+	if len(keyword) == 0 {
 		log.Fatalln("Invalid shop type")
 	}
 
-	request := &maps.TextSearchRequest{
+	request := &maps.NearbySearchRequest{
 		Location: &maps.LatLng{Lat: location[0], Lng: location[1]},
-		Radius:   1000,
-		Query:    query,
+		RankBy:   maps.RankByDistance,
+		Keyword:  keyword,
 		Type:     category,
 	}
 
@@ -144,16 +144,16 @@ func getPlacePhotoURL(photoReference string) string {
 
 // getNextShops 次の20件の検索結果一覧を返す
 func getNextShops(nextPageToken string) ([][]maps.PlacesSearchResult, string) {
-	request := &maps.TextSearchRequest{
+	request := &maps.NearbySearchRequest{
 		PageToken: nextPageToken,
 	}
 
 	return searchShops(request)
 }
 
-// searchShops リクエスト内容を受け取り，TextSearchRequestを行い，検索結果一覧と次の20件の検索結果一覧にアクセスするトークンを返す
-func searchShops(request *maps.TextSearchRequest) ([][]maps.PlacesSearchResult, string) {
-	response, err := Client.TextSearch(context.Background(), request)
+// searchShops リクエスト内容を受け取り，NearbySearchRequestを行い，検索結果一覧と次の20件の検索結果一覧にアクセスするトークンを返す
+func searchShops(request *maps.NearbySearchRequest) ([][]maps.PlacesSearchResult, string) {
+	response, err := Client.NearbySearch(context.Background(), request)
 	if err != nil {
 		log.Fatalf("fatal error: %s", err)
 
