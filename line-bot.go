@@ -129,6 +129,7 @@ func main() {
 						if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("入力された地名が見つかりません")).Do(); err != nil {
 							log.Print(err)
 						}
+						return
 					}
 
 				case *linebot.LocationMessage:
