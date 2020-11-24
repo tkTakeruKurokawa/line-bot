@@ -159,6 +159,7 @@ func main() {
 			}
 		}
 
+		fmt.Println(clickLocker.nowCount())
 		clickLocker.inclement()
 		if clickLocker.nowCount() == 1 {
 			shopData, searchData = startSearchOrSendMessage(bot, shopData, searchData)
