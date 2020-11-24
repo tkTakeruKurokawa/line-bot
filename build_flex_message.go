@@ -212,7 +212,7 @@ func buildFlexComponent(bubbles []*Bubble) Flex {
 }
 
 // buildResultBubble バブルを構築し，返す
-func getShopBubble(shopDetail maps.PlaceDetailsResult, photo []string) *Bubble {
+func getBubble(shopDetail maps.PlaceDetailsResult, photo []string) *Bubble {
 	return &Bubble{
 		Type:   typeBubble,
 		Header: buildResultBubbleHeder(photo),

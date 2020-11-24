@@ -45,6 +45,12 @@ type SearchData struct {
 	SelectMessage *linebot.ButtonsTemplate
 }
 
+// BubbleData バブル
+type BubbleData struct {
+	ID     int
+	Bubble *Bubble
+}
+
 // ClickLocker 次の10件を検索するを何回押したかカウントする
 type ClickLocker struct {
 	counter int
@@ -159,7 +165,6 @@ func main() {
 			}
 		}
 
-		fmt.Println(clickLocker.nowCount())
 		clickLocker.inclement()
 		if clickLocker.nowCount() == 1 {
 			shopData, searchData = startSearchOrSendMessage(bot, shopData, searchData)
@@ -255,7 +260,7 @@ func buildAndSendNextFlexMessage(shopData *ShopData, replyToken string) *ShopDat
 
 // sendMessageAndBuildShopData FlexMessageを構築し，送信する
 func sendMessageAndBuildShopData(shopData [][]maps.PlacesSearchResult, replyToken string, nextPageToken string) *ShopData {
-	bubbles := getBubbles(shopData, nextPageToken)
+	bubbles := getBubbles(shopData[0], nextPageToken)
 	sendFlexMessage(bubbles, replyToken)
 
 	return &ShopData{
@@ -265,25 +270,39 @@ func sendMessageAndBuildShopData(shopData [][]maps.PlacesSearchResult, replyToke
 }
 
 // getBubbles FlexMessageを構成するバブルを構築する
-func getBubbles(shopData [][]maps.PlacesSearchResult, nextPageToken string) []*Bubble {
-	var shopDetails []maps.PlaceDetailsResult
-	var photos [][]string
-	var bubbles []*Bubble
+func getBubbles(shopData []maps.PlacesSearchResult, nextPageToken string) []*Bubble {
+	var bubbles = make([]*Bubble, 10)
+	bubbleChannel := make(chan BubbleData, 10)
+	defer close(bubbleChannel)
 
-	for _, shop := range shopData[0] {
-		shopDetail := getPlaceDetails(shop.PlaceID)
-		shopDetails = append(shopDetails, shopDetail)
+	fmt.Println(len(shopData))
 
-		photo := getPlacePhotos(shopDetail.Photos)
-		photos = append(photos, photo)
-
-		bubbles = append(bubbles, getShopBubble(shopDetail, photo))
+	for index, shop := range shopData {
+		go func(index int, shop maps.PlacesSearchResult) {
+			getBubbleData(bubbleChannel, index, shop)
+		}(index, shop)
 	}
-	if !(reflect.ValueOf(shopData[1]).IsNil() && len(nextPageToken) == 0) {
+
+	for i := 0; i < 10; i++ {
+		bubble := <-bubbleChannel
+		bubbles[bubble.ID] = bubble.Bubble
+	}
+
+	if !(reflect.ValueOf(shopData).IsNil() && len(nextPageToken) == 0) {
 		bubbles = append(bubbles, getNextActionBubble())
 	}
 
 	return bubbles
+}
+
+func getBubbleData(bubbleChannel chan BubbleData, index int, shop maps.PlacesSearchResult) {
+	shopDetail := getPlaceDetails(shop.PlaceID)
+	photo := getPlacePhotos(shopDetail.Photos)
+	bubble := getBubble(shopDetail, photo)
+	bubbleChannel <- BubbleData{
+		ID:     index,
+		Bubble: bubble,
+	}
 }
 
 // sendFlexMessage http.Clientを利用してFlexMessageを送る
